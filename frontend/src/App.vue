@@ -1,95 +1,471 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
-  <div v-if="backendData && Array.isArray(backendData)" class="table-container">
-    <h3>Chemical Elements</h3>
-    <table class="elements-table">
-      <thead>
-        <tr>
-          <th>Atomic #</th>
-          <th>Symbol</th>
-          <th>Name</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-for="element in backendData" :key="element.id">
-          <td>{{ element.atomicNumber }}</td>
-          <td class="symbol">{{ element.symbol }}</td>
-          <td>{{ element.name }}</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-  <div v-else-if="typeof backendData === 'string'" class="error">
-    {{ backendData }}
+  <div class="pt-wrapper">
+    <h1 class="pt-title">Periodic Table of the Elements</h1>
+
+    <div v-if="loading" class="status-msg">Loading elements…</div>
+    <div v-else-if="error" class="status-msg error">{{ error }}</div>
+
+    <template v-else>
+      <div class="pt-outer">
+        <div class="pt-grid">
+
+          <!-- Main-table elements -->
+          <div
+            v-for="el in mainElements"
+            :key="el.atomicNumber"
+            class="el-cell"
+            :class="getCategory(el)"
+            :style="{ gridRow: Number(el.period), gridColumn: Number(el.group) }"
+            @click="selectElement(el)"
+          >
+            <span class="el-an">{{ el.atomicNumber }}</span>
+            <span class="el-sym">{{ el.symbol }}</span>
+            <span class="el-nm">{{ el.name }}</span>
+            <span class="el-aw">{{ formatWeight(el.atomicWeight) }}</span>
+          </div>
+
+          <!-- Lanthanide range placeholder at (period 6, group 3) -->
+          <div class="el-cell lanthanide placeholder"
+               :style="{ gridRow: 6, gridColumn: 3 }">
+            <span class="el-sym" style="font-size:0.65em">Ln</span>
+            <span class="el-nm">57 – 71</span>
+          </div>
+
+          <!-- Actinide range placeholder at (period 7, group 3) -->
+          <div class="el-cell actinide placeholder"
+               :style="{ gridRow: 7, gridColumn: 3 }">
+            <span class="el-sym" style="font-size:0.65em">An</span>
+            <span class="el-nm">89 – 103</span>
+          </div>
+
+          <!-- row 8 is a 20px spacer defined in grid-template-rows -->
+
+          <!-- Lanthanide series -->
+          <div class="series-label" :style="{ gridRow: 9, gridColumn: '1 / 3' }">
+            Lanthanide<br>Series
+          </div>
+          <div
+            v-for="(el, i) in lanthanides"
+            :key="el.atomicNumber"
+            class="el-cell lanthanide"
+            :style="{ gridRow: 9, gridColumn: i + 3 }"
+            @click="selectElement(el)"
+          >
+            <span class="el-an">{{ el.atomicNumber }}</span>
+            <span class="el-sym">{{ el.symbol }}</span>
+            <span class="el-nm">{{ el.name }}</span>
+            <span class="el-aw">{{ formatWeight(el.atomicWeight) }}</span>
+          </div>
+
+          <!-- Actinide series -->
+          <div class="series-label" :style="{ gridRow: 10, gridColumn: '1 / 3' }">
+            Actinide<br>Series
+          </div>
+          <div
+            v-for="(el, i) in actinides"
+            :key="el.atomicNumber"
+            class="el-cell actinide"
+            :style="{ gridRow: 10, gridColumn: i + 3 }"
+            @click="selectElement(el)"
+          >
+            <span class="el-an">{{ el.atomicNumber }}</span>
+            <span class="el-sym">{{ el.symbol }}</span>
+            <span class="el-nm">{{ el.name }}</span>
+            <span class="el-aw">{{ formatWeight(el.atomicWeight) }}</span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Element info modal -->
+      <transition name="fade">
+        <div v-if="selectedElement" class="el-modal-overlay" @click.self="selectedElement = null">
+          <div class="el-modal">
+            <button class="el-modal-close" @click="selectedElement = null">✕</button>
+            <div class="el-modal-header" :class="getCategory(selectedElement)">
+              <span class="el-modal-an">{{ selectedElement.atomicNumber }}</span>
+              <span class="el-modal-sym">{{ selectedElement.symbol }}</span>
+              <span class="el-modal-nm">{{ selectedElement.name }}</span>
+              <span class="el-modal-aw">{{ formatWeight(selectedElement.atomicWeight) }}</span>
+            </div>
+            <div class="el-modal-body">
+              <div class="el-modal-row"><span>Atomic Weight</span><span>{{ selectedElement.atomicWeight }}</span></div>
+              <div class="el-modal-row"><span>Group</span><span>{{ selectedElement.group ?? '–' }}</span></div>
+              <div class="el-modal-row"><span>Period</span><span>{{ selectedElement.period }}</span></div>
+              <div class="el-modal-row"><span>Block</span><span>{{ selectedElement.block }}</span></div>
+              <div class="el-modal-row"><span>Category</span><span>{{ getCategoryLabel(selectedElement) }}</span></div>
+            </div>
+          </div>
+        </div>
+      </transition>
+
+      <!-- Legend -->
+      <div class="legend">
+        <div v-for="cat in categories" :key="cat.key" class="legend-item">
+          <div class="legend-swatch" :class="cat.key"></div>
+          <span>{{ cat.label }}</span>
+        </div>
+      </div>
+    </template>
   </div>
 </template>
 
 <script>
-import HelloWorld from './components/HelloWorld.vue'
 import axios from 'axios'
+
+const CATEGORIES = [
+  { key: 'alkali-metal',     label: 'Alkali Metal' },
+  { key: 'alkaline-earth',   label: 'Alkaline Earth' },
+  { key: 'transition-metal', label: 'Transition Metal' },
+  { key: 'post-transition',  label: 'Post-Transition Metal' },
+  { key: 'metalloid',        label: 'Metalloid' },
+  { key: 'nonmetal',         label: 'Nonmetal' },
+  { key: 'halogen',          label: 'Halogen' },
+  { key: 'noble-gas',        label: 'Noble Gas' },
+  { key: 'lanthanide',       label: 'Lanthanide' },
+  { key: 'actinide',         label: 'Actinide' },
+]
 
 export default {
   name: 'App',
-  components: {
-    HelloWorld
-  },
   data() {
     return {
-      backendData: []
+      elements: [],
+      loading: true,
+      error: null,
+      categories: CATEGORIES,
+      selectedElement: null,
     }
+  },
+  computed: {
+    mainElements() {
+      return this.elements.filter(
+        el =>
+          !((el.atomicNumber >= 57 && el.atomicNumber <= 71) ||
+            (el.atomicNumber >= 89 && el.atomicNumber <= 103)) &&
+          el.group != null && el.period != null
+      )
+    },
+    lanthanides() {
+      return [...this.elements]
+        .filter(el => el.atomicNumber >= 57 && el.atomicNumber <= 71)
+        .sort((a, b) => a.atomicNumber - b.atomicNumber)
+    },
+    actinides() {
+      return [...this.elements]
+        .filter(el => el.atomicNumber >= 89 && el.atomicNumber <= 103)
+        .sort((a, b) => a.atomicNumber - b.atomicNumber)
+    },
   },
   mounted() {
     axios.get('http://localhost:3000/elements')
-      .then(response => {
-        this.backendData = response.data;
+      .then(res => {
+        this.elements = res.data
+        this.loading = false
       })
-      .catch(error => {
-        console.error('Backend Error:', error);
-        if (error.response && error.response.status === 500) {
-          this.backendData = "Error: Internal Server Error (Database connection failed).";
-        } else {
-          this.backendData = "Error: Could not connect to the server.";
-        }
-      });
+      .catch(err => {
+        console.error(err)
+        this.error = 'Could not load elements from the server.'
+        this.loading = false
+      })
+    window.addEventListener('keydown', this.onKeydown)
   },
-};
+  beforeUnmount() {
+    window.removeEventListener('keydown', this.onKeydown)
+  },
+  methods: {
+    selectElement(el) {
+      this.selectedElement = el
+    },
+    onKeydown(e) {
+      if (e.key === 'Escape') this.selectedElement = null
+    },
+    getCategoryLabel(el) {
+      const key = this.getCategory(el)
+      return CATEGORIES.find(c => c.key === key)?.label ?? key
+    },
+    getCategory(el) {
+      const n = el.atomicNumber
+      if ([2, 10, 18, 36, 54, 86, 118].includes(n))                        return 'noble-gas'
+      if ([9, 17, 35, 53, 85, 117].includes(n))                            return 'halogen'
+      if ([3, 11, 19, 37, 55, 87].includes(n))                             return 'alkali-metal'
+      if ([4, 12, 20, 38, 56, 88].includes(n))                             return 'alkaline-earth'
+      if (el.block === 'd')                                                 return 'transition-metal'
+      if ([5, 14, 32, 33, 51, 52, 84].includes(n))                         return 'metalloid'
+      if ([1, 6, 7, 8, 15, 16, 34].includes(n))                            return 'nonmetal'
+      if ([13, 31, 49, 50, 81, 82, 83, 113, 114, 115, 116].includes(n))   return 'post-transition'
+      return 'unknown'
+    },
+    formatWeight(w) {
+      if (w == null) return ''
+      const n = Number(w)
+      if (isNaN(n)) return ''
+      return n % 1 === 0 ? `(${n})` : parseFloat(n.toFixed(3)).toString()
+    },
+  },
+}
 </script>
 
 <style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #0d0d14;
+  color: #e0e0e0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+  min-height: 100vh;
+}
+
+#app { width: 100%; }
+
+.pt-wrapper {
+  padding: 24px 12px 48px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 24px;
+}
+
+.pt-title {
+  font-size: clamp(1.1rem, 2.4vw, 2rem);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: #fff;
   text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
 }
 
-.table-container {
-  margin: 20px auto;
-  max-width: 600px;
-}
+.status-msg { font-size: 1.1rem; color: #aaa; padding: 48px; }
+.status-msg.error { color: #e74c3c; }
 
-.elements-table {
+/* ── Horizontal scroll wrapper ── */
+.pt-outer {
+  overflow-x: auto;
   width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-  box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+  padding-bottom: 6px;
 }
 
-.elements-table th, .elements-table td {
-  padding: 12px 15px;
-  border-bottom: 1px solid #ddd;
+/* ── Periodic table grid ──
+   18 columns for groups 1-18.
+   Rows 1-7  → periods 1-7
+   Row  8    → 20px spacer
+   Rows 9-10 → lanthanide / actinide f-block series
+*/
+.pt-grid {
+  display: grid;
+  grid-template-columns: repeat(18, clamp(52px, 4.15vw, 72px));
+  grid-template-rows:
+    repeat(7, clamp(52px, 4.15vw, 72px))
+    20px
+    repeat(2, clamp(52px, 4.15vw, 72px));
+  gap: 2px;
+  width: max-content;
+  margin: 0 auto;
 }
 
-.elements-table th {
-  background-color: #42b983;
-  color: white;
+/* ── Cell base ── */
+.el-cell {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  padding: 2px 3px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.07);
+  cursor: default;
+  transition: transform 0.12s ease, filter 0.12s ease, border-color 0.12s ease;
 }
 
-.symbol {
-  font-weight: bold;
-  color: #2c3e50;
+.el-cell:hover {
+  transform: scale(1.2);
+  z-index: 20;
+  filter: brightness(1.3);
+  border-color: rgba(255,255,255,0.45);
 }
+
+.el-cell.placeholder { opacity: 0.5; }
+
+.el-an {
+  position: absolute;
+  top: 3px;
+  left: 4px;
+  font-size: clamp(7px, 0.62vw, 10px);
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.el-sym {
+  font-size: clamp(15px, 1.55vw, 23px);
+  font-weight: 800;
+  line-height: 1;
+  margin-top: 8px;
+}
+
+.el-nm {
+  font-size: clamp(5px, 0.52vw, 8px);
+  opacity: 0.88;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  width: 100%;
+  padding: 0 2px;
+}
+
+.el-aw {
+  font-size: clamp(5px, 0.48vw, 7px);
+  opacity: 0.72;
+}
+
+/* ── Series labels (Lanthanide / Actinide) ── */
+.series-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: clamp(8px, 0.62vw, 11px);
+  color: #777;
+  line-height: 1.45;
+}
+
+/* ── Category colours ── */
+.alkali-metal     { background: #b03a2e; color: #fff; }
+.alkaline-earth   { background: #ca6f1e; color: #fff; }
+.transition-metal { background: #9a7d0a; color: #fff; }
+.post-transition  { background: #1e8449; color: #fff; }
+.metalloid        { background: #117a65; color: #fff; }
+.nonmetal         { background: #6c3483; color: #fff; }
+.halogen          { background: #935116; color: #fff; }
+.noble-gas        { background: #943476; color: #fff; }
+.lanthanide       { background: #1a5276; color: #fff; }
+.actinide         { background: #0e3460; color: #fff; }
+.unknown          { background: #3d3d3d; color: #ccc; }
+
+/* ── Legend ── */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  justify-content: center;
+  padding: 14px 22px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 8px;
+  max-width: 960px;
+  width: 100%;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: clamp(10px, 0.85vw, 13px);
+  white-space: nowrap;
+}
+
+.legend-swatch {
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+/* ── Element cells: pointer cursor ── */
+.el-cell:not(.placeholder) { cursor: pointer; }
+
+/* ── Info modal ── */
+.el-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.el-modal {
+  position: relative;
+  background: #1a1a26;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 10px;
+  width: min(340px, 90vw);
+  overflow: hidden;
+  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
+}
+
+.el-modal-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: rgba(255,255,255,0.6);
+  font-size: 1.1rem;
+  cursor: pointer;
+  line-height: 1;
+  padding: 2px 6px;
+  border-radius: 4px;
+  z-index: 1;
+}
+.el-modal-close:hover { color: #fff; background: rgba(255,255,255,0.1); }
+
+.el-modal-header {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 28px 16px 20px;
+  gap: 2px;
+}
+
+.el-modal-an {
+  position: absolute;
+  top: 10px;
+  left: 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  opacity: 0.85;
+}
+
+.el-modal-sym {
+  font-size: 3.8rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.el-modal-nm {
+  font-size: 1.1rem;
+  font-weight: 600;
+  opacity: 0.9;
+}
+
+.el-modal-aw {
+  font-size: 0.8rem;
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+.el-modal-body {
+  padding: 16px 20px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.el-modal-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9rem;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding-bottom: 8px;
+}
+.el-modal-row:last-child { border-bottom: none; padding-bottom: 0; }
+.el-modal-row span:first-child { color: #888; }
+.el-modal-row span:last-child  { font-weight: 600; }
+
+/* ── Fade transition ── */
+.fade-enter-active, .fade-leave-active { transition: opacity 0.18s ease; }
+.fade-enter-from, .fade-leave-to { opacity: 0; }
 </style>
