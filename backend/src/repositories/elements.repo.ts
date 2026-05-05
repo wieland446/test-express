@@ -26,15 +26,6 @@ export const findElementByName = async (
 };
 
 export const findAllElements = async (): Promise<Element[]> => {
-  const res = await pool.query(`SELECT * FROM elements`);
-
-  return res.rows.map((row) => ({
-    name: row.name,
-    symbol: row.symbol,
-    atomicNumber: row.atomic_number,
-    atomicWeight: row.atomic_weight,
-    group: row.group,
-    period: row.period,
-    block: row.block,
-  }));
+  const res = await pool.query("SELECT * FROM elements");
+  return res.rows;
 };

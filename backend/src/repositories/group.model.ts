@@ -17,3 +17,8 @@ export const findGroupByName = async (name: string): Promise<Group | null> => {
     },
   };
 };
+
+export const findAllGroups = async (): Promise<Group[]> => {
+  const res = await pool.query("SELECT * FROM groups");
+  return res.rows;
+};
