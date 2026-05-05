@@ -14,7 +14,7 @@
             v-for="el in mainElements"
             :key="el.atomicNumber"
             class="el-cell"
-            :class="getCategory(el)"
+            :class="[getCategory(el), { 'filtered-out': !activeFilters.includes(getCategory(el)) }]"
             :style="{ gridRow: Number(el.period), gridColumn: Number(el.group) }"
             @click="selectElement(el)"
           >
@@ -26,6 +26,7 @@
 
           <!-- Lanthanide range placeholder at (period 6, group 3) -->
           <div class="el-cell lanthanide placeholder"
+               :class="{ 'filtered-out': !activeFilters.includes('lanthanide') }"
                :style="{ gridRow: 6, gridColumn: 3 }">
             <span class="el-sym" style="font-size:0.65em">Ln</span>
             <span class="el-nm">57 – 71</span>
@@ -33,6 +34,7 @@
 
           <!-- Actinide range placeholder at (period 7, group 3) -->
           <div class="el-cell actinide placeholder"
+               :class="{ 'filtered-out': !activeFilters.includes('actinide') }"
                :style="{ gridRow: 7, gridColumn: 3 }">
             <span class="el-sym" style="font-size:0.65em">An</span>
             <span class="el-nm">89 – 103</span>
@@ -48,6 +50,7 @@
             v-for="(el, i) in lanthanides"
             :key="el.atomicNumber"
             class="el-cell lanthanide"
+            :class="{ 'filtered-out': !activeFilters.includes('lanthanide') }"
             :style="{ gridRow: 9, gridColumn: i + 3 }"
             @click="selectElement(el)"
           >
@@ -65,6 +68,7 @@
             v-for="(el, i) in actinides"
             :key="el.atomicNumber"
             class="el-cell actinide"
+            :class="{ 'filtered-out': !activeFilters.includes('actinide') }"
             :style="{ gridRow: 10, gridColumn: i + 3 }"
             @click="selectElement(el)"
           >
@@ -108,12 +112,19 @@
         </div>
       </transition>
 
-      <!-- Legend -->
-      <div class="legend">
-        <div v-for="cat in categories" :key="cat.key" class="legend-item">
+      <!-- Filters -->
+      <div class="filters">
+        <div class="filters-header">
+          <span class="filters-title">Filter by category</span>
+          <button class="filters-toggle" @click="activeFilters = activeFilters.length === categories.length ? [] : categories.map(c => c.key)">
+            {{ activeFilters.length === categories.length ? 'Deselect all' : 'Select all' }}
+          </button>
+        </div>
+        <label v-for="cat in categories" :key="cat.key" class="filter-item">
+          <input type="checkbox" :value="cat.key" v-model="activeFilters" />
           <div class="legend-swatch" :class="cat.key"></div>
           <span>{{ cat.label }}</span>
-        </div>
+        </label>
       </div>
     </template>
   </div>
@@ -145,6 +156,7 @@ export default {
       categories: CATEGORIES,
       selectedElement: null,
       elementImageUrl: null,
+      activeFilters: CATEGORIES.map(c => c.key),
     }
   },
   computed: {
@@ -309,6 +321,7 @@ body {
 }
 
 .el-cell.placeholder { opacity: 0.5; }
+.el-cell.filtered-out { opacity: 0.1; pointer-events: none; }
 
 .el-an {
   position: absolute;
@@ -366,12 +379,13 @@ body {
 .actinide         { background: #0e3460; color: #fff; }
 .unknown          { background: #3d3d3d; color: #ccc; }
 
-/* ── Legend ── */
-.legend {
+/* ── Filters ── */
+.filters {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 18px;
   justify-content: center;
+  align-items: center;
   padding: 14px 22px;
   background: rgba(255,255,255,0.04);
   border-radius: 8px;
@@ -379,13 +393,42 @@ body {
   width: 100%;
 }
 
-.legend-item {
+.filters-header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.filters-title {
+  font-size: 0.78rem;
+  color: #888;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.filters-toggle {
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.18);
+  color: #bbb;
+  font-size: 0.75rem;
+  padding: 3px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.filters-toggle:hover { background: rgba(255,255,255,0.08); color: #fff; }
+
+.filter-item {
   display: flex;
   align-items: center;
   gap: 7px;
   font-size: clamp(10px, 0.85vw, 13px);
   white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
 }
+.filter-item input[type="checkbox"] { accent-color: #6ba4d8; cursor: pointer; }
 
 .legend-swatch {
   width: 16px;
