@@ -89,11 +89,20 @@
               <span class="el-modal-aw">{{ formatWeight(selectedElement.atomicWeight) }}</span>
             </div>
             <div class="el-modal-body">
+              <div v-if="elementImageUrl" class="el-modal-img-wrap">
+                <img :src="elementImageUrl" :alt="selectedElement.name" class="el-modal-img" />
+              </div>
               <div class="el-modal-row"><span>Atomic Weight</span><span>{{ selectedElement.atomicWeight }}</span></div>
               <div class="el-modal-row"><span>Group</span><span>{{ selectedElement.group ?? '–' }}</span></div>
               <div class="el-modal-row"><span>Period</span><span>{{ selectedElement.period }}</span></div>
               <div class="el-modal-row"><span>Block</span><span>{{ selectedElement.block }}</span></div>
               <div class="el-modal-row"><span>Category</span><span>{{ getCategoryLabel(selectedElement) }}</span></div>
+              <a
+                :href="'https://en.wikipedia.org/wiki/' + selectedElement.name"
+                target="_blank"
+                rel="noopener"
+                class="el-modal-wiki"
+              >Wikipedia →</a>
             </div>
           </div>
         </div>
@@ -135,6 +144,7 @@ export default {
       error: null,
       categories: CATEGORIES,
       selectedElement: null,
+      elementImageUrl: null,
     }
   },
   computed: {
@@ -155,6 +165,20 @@ export default {
       return [...this.elements]
         .filter(el => el.atomicNumber >= 89 && el.atomicNumber <= 103)
         .sort((a, b) => a.atomicNumber - b.atomicNumber)
+    },
+  },
+  watch: {
+    selectedElement(el) {
+      this.elementImageUrl = null
+      if (!el) return
+      fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(el.name)}&prop=pageimages&format=json&pithumbsize=300&origin=*`)
+        .then(r => r.json())
+        .then(data => {
+          const pages = data.query.pages
+          const page = pages[Object.keys(pages)[0]]
+          this.elementImageUrl = page.thumbnail?.source ?? null
+        })
+        .catch(() => { this.elementImageUrl = null })
     },
   },
   mounted() {
@@ -464,6 +488,28 @@ body {
 .el-modal-row:last-child { border-bottom: none; padding-bottom: 0; }
 .el-modal-row span:first-child { color: #888; }
 .el-modal-row span:last-child  { font-weight: 600; }
+
+.el-modal-img-wrap {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 4px;
+}
+.el-modal-img {
+  max-width: 200px;
+  max-height: 160px;
+  border-radius: 6px;
+  object-fit: contain;
+  background: rgba(255,255,255,0.05);
+}
+.el-modal-wiki {
+  display: block;
+  text-align: center;
+  margin-top: 8px;
+  color: #6ba4d8;
+  font-size: 0.85rem;
+  text-decoration: none;
+}
+.el-modal-wiki:hover { text-decoration: underline; color: #90c4f8; }
 
 /* ── Fade transition ── */
 .fade-enter-active, .fade-leave-active { transition: opacity 0.18s ease; }
