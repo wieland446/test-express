@@ -7,6 +7,9 @@ import { authRouter } from "./src/routes/auth.routes.js";
 import { elementRouter } from "./src/routes/elements.routes.js";
 import handleServerErrors from "./src/middlewares/handleServerErrors.js";
 import { handleUserErrors } from "./src/middlewares/handleUserErrors.js";
+import { blockRouter } from "./src/routes/blocks.routes..js";
+import { groupRouter } from "./src/routes/groups.routes.js";
+import { periodRouter } from "./src/routes/periods.routes.js";
 
 // INIT
 const PORT = Number(process.env.PORT ?? 3000);
@@ -22,6 +25,9 @@ app.use(morgan("dev"));
 app.use("/users", userRouter);
 app.use("/auth", authRouter);
 app.use("/elements", elementRouter);
+app.use("/blocks", blockRouter);
+app.use("/groups", groupRouter);
+app.use("/periods", periodRouter);
 
 // SPECIFIC ROUTES ERROR HANDLING
 app.use(handleUserErrors);

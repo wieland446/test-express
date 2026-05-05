@@ -3,8 +3,12 @@ import type { Group } from "../models/group.model.js";
 
 const pool = getPostgresPool();
 
-export const findGroupByName = async (name: string): Promise<Group | null> => {
-  const res = await pool.query(`SELECT * FROM groups WHERE name = $1`, [name]);
+export const findGroupByNumber = async (
+  number: number,
+): Promise<Group | null> => {
+  const res = await pool.query(`SELECT * FROM groups WHERE number = $1`, [
+    number,
+  ]);
 
   if (!res.rows[0]) {
     return null;
@@ -12,13 +16,18 @@ export const findGroupByName = async (name: string): Promise<Group | null> => {
 
   return {
     family: {
+      number: res.rows[0].number,
       name: res.rows[0].name,
-      number: res.rows[0].symbol,
     },
   };
 };
 
 export const findAllGroups = async (): Promise<Group[]> => {
   const res = await pool.query("SELECT * FROM groups");
-  return res.rows;
+  return res.rows.map((row) => ({
+    family: {
+      number: row.number,
+      name: row.name,
+    },
+  }));
 };
