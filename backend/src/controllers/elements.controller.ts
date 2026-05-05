@@ -1,4 +1,11 @@
 import type { Request, Response, NextFunction } from "express";
-export async function getElements(  req: Request, res: Response, next: NextFunction) {
-    res.json({ message: "Here are the elements" });
-}   
+import { getAllElements } from "../services/elements.service.js";
+
+export async function getElements(req: Request, res: Response, next: NextFunction) {
+  try {
+    const elements = await getAllElements();
+    res.json(elements);
+  } catch (err) {
+    next(err);
+  }
+}
