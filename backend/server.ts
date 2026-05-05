@@ -4,6 +4,7 @@ import cors from "cors";
 import morgan from "morgan";
 import { userRouter } from "./src/routes/users.routes.js";
 import { authRouter } from "./src/routes/auth.routes.js";
+import { elementRouter } from "./src/routes/elements.routes.js";
 import handleServerErrors from "./src/middlewares/handleServerErrors.js";
 import { handleUserErrors } from "./src/middlewares/handleUserErrors.js";
 
@@ -20,6 +21,7 @@ app.use(morgan("dev"));
 // ROUTES
 app.use("/users", userRouter);
 app.use("/auth", authRouter);
+app.use("/elements", elementRouter);
 
 // SPECIFIC ROUTES ERROR HANDLING
 app.use(handleUserErrors);
