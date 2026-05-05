@@ -1,9 +1,12 @@
 import express from "express";
-import { getElements } from "../controllers/elements.controller.js";
-
+import {
+  handleGetElements,
+  handleGetElementByName,
+} from "../controllers/elements.controller.js";
 
 const elementRouter = express.Router();
 
-elementRouter.get("/", getElements);
+elementRouter.get("/", handleGetElements);
+elementRouter.get("/:elementName", handleGetElementByName);
 
 export { elementRouter };
