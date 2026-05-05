@@ -3,7 +3,7 @@ export interface Element {
   symbol: string;
   atomicNumber: number;
   atomicWeight: number;
-  group: string;
-  period: string;
+  group: number;
+  period: number;
   block: string;
 }
