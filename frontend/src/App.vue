@@ -2,7 +2,7 @@
   <img alt="Vue logo" src="./assets/logo.png">
   <HelloWorld msg="Welcome to Your Vue.js App"/>
   <div v-if="backendData">
-    <h3>Data from PostgreSQL:</h3>
+    <h3>Backend Status:</h3>
     <pre>{{ backendData }}</pre>
   </div>
 </template>
@@ -22,13 +22,13 @@ export default {
     }
   },
   mounted() {
-    axios.get('http://localhost:3000')
+    axios.get('http://localhost:3000/elements')
       .then(response => {
         this.backendData = response.data;
       })
       .catch(error => {
         console.error('Error connecting to backend:', error);
-        this.backendData = "Failed to load data. Check if the backend is running on port 3000 and CORS is enabled.";
+        this.backendData = "Error: Could not connect to the server.";
       });
   }
 }
