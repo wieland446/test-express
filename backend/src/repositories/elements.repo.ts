@@ -24,3 +24,8 @@ export const findElementByName = async (
     block: res.rows[0].block,
   };
 };
+
+export const findAllElements = async (): Promise<Element[]> => {
+  const res = await pool.query("SELECT * FROM elements");
+  return res.rows;
+};

@@ -14,3 +14,8 @@ export const findBlockByName = async (name: string): Promise<Block | null> => {
     name: res.rows[0].name,
   };
 };
+
+export const findAllBlocks = async (): Promise<Block[]> => {
+  const res = await pool.query("SELECT * FROM blocks");
+  return res.rows;
+};

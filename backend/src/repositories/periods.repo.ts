@@ -18,3 +18,8 @@ export const findPeriodByNumber = async (
     protons: res.rows[0].number,
   };
 };
+
+export const findAllPeriods = async (): Promise<Period[]> => {
+  const res = await pool.query("SELECT * FROM periods");
+  return res.rows;
+};
