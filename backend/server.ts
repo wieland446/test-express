@@ -1,5 +1,6 @@
 import express from "express";
 import cookieParser from "cookie-parser";
+import cors from "cors";
 import morgan from "morgan";
 import { userRouter } from "./src/routes/users.routes.js";
 import { authRouter } from "./src/routes/auth.routes.js";
@@ -11,6 +12,7 @@ const PORT = Number(process.env.PORT ?? 3000);
 const app = express();
 
 // MIDDLEWARES
+app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 app.use(morgan("dev"));
