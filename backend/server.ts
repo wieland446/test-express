@@ -7,7 +7,7 @@ import { authRouter } from "./src/routes/auth.routes.js";
 import { elementRouter } from "./src/routes/elements.routes.js";
 import handleServerErrors from "./src/middlewares/handleServerErrors.js";
 import { handleUserErrors } from "./src/middlewares/handleUserErrors.js";
-import { blockRouter } from "./src/routes/blocks.routes..js";
+import { blockRouter } from "./src/routes/blocks.routes.js";
 import { groupRouter } from "./src/routes/groups.routes.js";
 import { periodRouter } from "./src/routes/periods.routes.js";
 

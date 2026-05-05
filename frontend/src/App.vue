@@ -36,7 +36,7 @@ export default {
   },
   data() {
     return {
-      backendData: null
+      backendData: []
     }
   },
   mounted() {
@@ -52,8 +52,8 @@ export default {
           this.backendData = "Error: Could not connect to the server.";
         }
       });
-    }
-  }
+  },
+};
 </script>
 
 <style>
