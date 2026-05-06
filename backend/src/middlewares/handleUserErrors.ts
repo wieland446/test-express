@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
+import { logger } from "../helpers/logger.js";
 
 export class UserNotFoundError extends Error {
   constructor(userId: string) {
@@ -21,11 +22,11 @@ export const handleUserErrors = (
   next: NextFunction,
 ) => {
   if (err instanceof UserNotFoundError) {
-    console.error(`${err.name}: ${err.message}`);
+    logger.warn(err.message, { name: err.name });
     return res.status(404).json({ message: err.message });
   }
   if (err instanceof InvalidUserDataError) {
-    console.error(`${err.name}: ${err.message}`);
+    logger.warn(err.message, { name: err.name });
     return res.status(400).json({ message: err.message });
   }
   return next(err);

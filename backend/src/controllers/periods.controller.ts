@@ -1,8 +1,5 @@
 import type { Request, Response, NextFunction } from "express";
-import {
-  getAllPeriods,
-  getPeriodByNumber,
-} from "../services/periods.service.js";
+import { findAllPeriods, findPeriodByNumber } from "../repositories/periods.repo.js";
 import { statusCodes } from "../helpers/statusCodes.js";
 
 export async function handleGetPeriods(
@@ -11,10 +8,11 @@ export async function handleGetPeriods(
   next: NextFunction,
 ) {
   try {
-    const periods = await getAllPeriods();
-    res.json(periods);
+    const periods = await findAllPeriods();
+    res.set("Cache-Control", "public, max-age=3600");
+    return res.json(periods);
   } catch (err) {
-    next(err);
+    return next(err);
   }
 }
 
@@ -24,15 +22,16 @@ export async function handleGetPeriodByNumber(
   next: NextFunction,
 ) {
   const { periodNumber } = req.params;
+  const n = Number(periodNumber);
 
-  if (!periodNumber) {
+  if (!periodNumber || !Number.isInteger(n) || n < 1 || n > 7) {
     return res.status(statusCodes.badRequest).json({
-      message: "period number is required in request parameters",
+      message: "period number must be an integer between 1 and 7",
     });
   }
 
   try {
-    const period = await getPeriodByNumber(Number(periodNumber));
+    const period = await findPeriodByNumber(n);
     if (period === null) {
       return res.status(statusCodes.notFound).json({ message: `Period '${periodNumber}' not found` });
     }

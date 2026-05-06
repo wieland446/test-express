@@ -1,17 +1,8 @@
 export const statusCodes = {
   badRequest: 400,
   unauthorized: 401,
-  paymentRequired: 402,
   forbidden: 403,
   notFound: 404,
-  methodNotAllowed: 405,
-  notAcceptable: 406,
-  conflict: 409,
-  unprocessableEntity: 422,
   tooManyRequests: 429,
   internalServerError: 500,
-  notImplemented: 501,
-  badGateway: 502,
-  serviceUnavailable: 503,
-  gatewayTimeout: 504,
 } as const;

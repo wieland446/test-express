@@ -81,66 +81,29 @@
         </div>
       </div>
 
-      <!-- Element info modal -->
       <transition name="fade">
-        <div v-if="selectedElement" class="el-modal-overlay" @click.self="selectedElement = null">
-          <div class="el-modal">
-            <button class="el-modal-close" @click="selectedElement = null">✕</button>
-            <div class="el-modal-header" :class="getCategory(selectedElement)">
-              <span class="el-modal-an">{{ selectedElement.atomicNumber }}</span>
-              <span class="el-modal-sym">{{ selectedElement.symbol }}</span>
-              <span class="el-modal-nm">{{ selectedElement.name }}</span>
-              <span class="el-modal-aw">{{ formatWeight(selectedElement.atomicWeight) }}</span>
-            </div>
-            <div class="el-modal-body">
-              <div v-if="elementImageUrl" class="el-modal-img-wrap">
-                <img :src="elementImageUrl" :alt="selectedElement.name" class="el-modal-img" />
-              </div>
-              <div class="el-modal-row"><span>Atomic Weight</span><span>{{ selectedElement.atomicWeight }}</span></div>
-              <div class="el-modal-row"><span>Group</span><span>{{ selectedElement.group ?? '–' }}</span></div>
-              <div class="el-modal-row"><span>Period</span><span>{{ selectedElement.period }}</span></div>
-              <div class="el-modal-row"><span>Block</span><span>{{ selectedElement.block }}</span></div>
-              <div class="el-modal-row"><span>Category</span><span>{{ getCategoryLabel(selectedElement) }}</span></div>
-              <a
-                :href="'https://en.wikipedia.org/wiki/' + selectedElement.name"
-                target="_blank"
-                rel="noopener"
-                class="el-modal-wiki-btn"
-              >
-                <span class="wiki-btn-shimmer"></span>
-                <svg class="wiki-btn-icon" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M12.09 13.119c-.936 1.932-2.217 4.548-2.853 5.728-.616 1.092-1.017 1.808-1.153 2.109-.139.310-.202.546-.202.703 0 .498.387.866.886.866.405 0 .744-.229.996-.684l3.906-7.897 3.906 7.897c.252.455.591.684.997.684.499 0 .886-.368.886-.866 0-.157-.063-.393-.202-.703-.136-.301-.537-1.017-1.153-2.109-.636-1.18-1.917-3.796-2.853-5.728-.273-.548-.523-1.058-.747-1.524l-1.358-2.749-1.358 2.749c-.224.466-.474.976-.747 1.524zM2 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10S2 17.523 2 12zm1.5 0C3.5 16.687 7.313 20.5 12 20.5S20.5 16.687 20.5 12 16.687 3.5 12 3.5 3.5 7.313 3.5 12z"/>
-                </svg>
-                <span class="wiki-btn-text">Open in Wikipedia</span>
-                <svg class="wiki-btn-arrow" viewBox="0 0 20 20" fill="currentColor">
-                  <path fill-rule="evenodd" d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z" clip-rule="evenodd" />
-                </svg>
-              </a>
-            </div>
-          </div>
-        </div>
+        <ElementModal
+          v-if="selectedElement"
+          :element="selectedElement"
+          :image-url="elementImageUrl"
+          :category="getCategory(selectedElement)"
+          :category-label="getCategoryLabel(selectedElement)"
+          @close="selectedElement = null"
+        />
       </transition>
 
-      <!-- Filters -->
-      <div class="filters">
-        <div class="filters-header">
-          <span class="filters-title">Filter by category</span>
-          <button class="filters-toggle" @click="activeFilters = activeFilters.length === categories.length ? [] : categories.map(c => c.key)">
-            {{ activeFilters.length === categories.length ? 'Deselect all' : 'Select all' }}
-          </button>
-        </div>
-        <label v-for="cat in categories" :key="cat.key" class="filter-item">
-          <input type="checkbox" :value="cat.key" v-model="activeFilters" />
-          <div class="legend-swatch" :class="cat.key"></div>
-          <span>{{ cat.label }}</span>
-        </label>
-      </div>
+      <FilterPanel
+        :categories="categories"
+        v-model="activeFilters"
+      />
     </template>
   </div>
 </template>
 
 <script>
 import axios from 'axios'
+import ElementModal from './components/ElementModal.vue'
+import FilterPanel from './components/FilterPanel.vue'
 
 const CATEGORIES = [
   { key: 'alkali-metal',     label: 'Alkali Metal' },
@@ -155,8 +118,11 @@ const CATEGORIES = [
   { key: 'actinide',         label: 'Actinide' },
 ]
 
+const IMAGE_CACHE_MAX = 50
+
 export default {
   name: 'App',
+  components: { ElementModal, FilterPanel },
   data() {
     return {
       elements: [],
@@ -171,21 +137,16 @@ export default {
   },
   computed: {
     mainElements() {
-      return this.elements.filter(
-        el =>
-          !((el.atomicNumber >= 57 && el.atomicNumber <= 71) ||
-            (el.atomicNumber >= 89 && el.atomicNumber <= 103)) &&
-          el.group != null && el.period != null
-      )
+      return this.elements.filter(el => el.group != null && el.period != null)
     },
     lanthanides() {
       return [...this.elements]
-        .filter(el => el.atomicNumber >= 57 && el.atomicNumber <= 71)
+        .filter(el => el.group == null && el.period === 6)
         .sort((a, b) => a.atomicNumber - b.atomicNumber)
     },
     actinides() {
       return [...this.elements]
-        .filter(el => el.atomicNumber >= 89 && el.atomicNumber <= 103)
+        .filter(el => el.group == null && el.period === 7)
         .sort((a, b) => a.atomicNumber - b.atomicNumber)
     },
   },
@@ -197,16 +158,25 @@ export default {
         this.elementImageUrl = this.imageCache[el.atomicNumber]
         return
       }
-      fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(el.name)}&prop=pageimages&format=json&pithumbsize=300&origin=*`)
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 5000)
+      fetch(
+        `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(el.name)}&prop=pageimages&format=json&pithumbsize=300&origin=*`,
+        { signal: controller.signal },
+      )
         .then(r => r.json())
         .then(data => {
+          clearTimeout(timeoutId)
           const pages = data.query.pages
           const page = pages[Object.keys(pages)[0]]
           const url = page.thumbnail?.source ?? null
+          const keys = Object.keys(this.imageCache)
+          if (keys.length >= IMAGE_CACHE_MAX) delete this.imageCache[keys[0]]
           this.imageCache[el.atomicNumber] = url
           this.elementImageUrl = url
         })
         .catch(() => {
+          clearTimeout(timeoutId)
           this.imageCache[el.atomicNumber] = null
           this.elementImageUrl = null
         })
@@ -250,6 +220,8 @@ export default {
       if ([5, 14, 32, 33, 51, 52, 84].includes(n))                         return 'metalloid'
       if ([1, 6, 7, 8, 15, 16, 34].includes(n))                            return 'nonmetal'
       if ([13, 31, 49, 50, 81, 82, 83, 113, 114, 115, 116].includes(n))   return 'post-transition'
+      if (el.block === 'f' && el.period === 6)                              return 'lanthanide'
+      if (el.block === 'f' && el.period === 7)                              return 'actinide'
       return 'unknown'
     },
     formatWeight(w) {
@@ -300,12 +272,7 @@ body {
   padding-bottom: 6px;
 }
 
-/* ── Periodic table grid ──
-   18 columns for groups 1-18.
-   Rows 1-7  → periods 1-7
-   Row  8    → 20px spacer
-   Rows 9-10 → lanthanide / actinide f-block series
-*/
+/* ── Periodic table grid ── */
 .pt-grid {
   display: grid;
   grid-template-columns: repeat(18, clamp(52px, 4.15vw, 72px));
@@ -342,6 +309,7 @@ body {
 
 .el-cell.placeholder { opacity: 0.5; }
 .el-cell.filtered-out { opacity: 0.1; pointer-events: none; }
+.el-cell:not(.placeholder) { cursor: pointer; }
 
 .el-an {
   position: absolute;
@@ -375,7 +343,7 @@ body {
   opacity: 0.72;
 }
 
-/* ── Series labels (Lanthanide / Actinide) ── */
+/* ── Series labels ── */
 .series-label {
   display: flex;
   align-items: center;
@@ -386,7 +354,7 @@ body {
   line-height: 1.45;
 }
 
-/* ── Category colours ── */
+/* ── Category colours (global — used by grid cells and modal header) ── */
 .alkali-metal     { background: #b03a2e; color: #fff; }
 .alkaline-earth   { background: #ca6f1e; color: #fff; }
 .transition-metal { background: #9a7d0a; color: #fff; }
@@ -399,253 +367,19 @@ body {
 .actinide         { background: #0e3460; color: #fff; }
 .unknown          { background: #3d3d3d; color: #ccc; }
 
-/* ── Filters ── */
-.filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 18px;
-  justify-content: center;
-  align-items: center;
-  padding: 14px 22px;
-  background: rgba(255,255,255,0.04);
-  border-radius: 8px;
-  max-width: 960px;
-  width: 100%;
-}
+/* ── Legend swatches in FilterPanel ── */
+.legend-swatch.alkali-metal     { background: #b03a2e; }
+.legend-swatch.alkaline-earth   { background: #ca6f1e; }
+.legend-swatch.transition-metal { background: #9a7d0a; }
+.legend-swatch.post-transition  { background: #1e8449; }
+.legend-swatch.metalloid        { background: #117a65; }
+.legend-swatch.nonmetal         { background: #6c3483; }
+.legend-swatch.halogen          { background: #935116; }
+.legend-swatch.noble-gas        { background: #943476; }
+.legend-swatch.lanthanide       { background: #1a5276; }
+.legend-swatch.actinide         { background: #0e3460; }
 
-.filters-header {
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 4px;
-}
-
-.filters-title {
-  font-size: 0.78rem;
-  color: #888;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-}
-
-.filters-toggle {
-  background: transparent;
-  border: 1px solid rgba(255,255,255,0.18);
-  color: #bbb;
-  font-size: 0.75rem;
-  padding: 3px 10px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-.filters-toggle:hover { background: rgba(255,255,255,0.08); color: #fff; }
-
-.filter-item {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  font-size: clamp(10px, 0.85vw, 13px);
-  white-space: nowrap;
-  cursor: pointer;
-  user-select: none;
-}
-.filter-item input[type="checkbox"] { accent-color: #6ba4d8; cursor: pointer; }
-
-.legend-swatch {
-  width: 16px;
-  height: 16px;
-  border-radius: 3px;
-  flex-shrink: 0;
-}
-
-/* ── Element cells: pointer cursor ── */
-.el-cell:not(.placeholder) { cursor: pointer; }
-
-/* ── Info modal ── */
-.el-modal-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 100;
-}
-
-.el-modal {
-  position: relative;
-  background: #1a1a26;
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 10px;
-  width: min(340px, 90vw);
-  overflow: hidden;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
-}
-
-.el-modal-close {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  background: transparent;
-  border: none;
-  color: rgba(255,255,255,0.6);
-  font-size: 1.1rem;
-  cursor: pointer;
-  line-height: 1;
-  padding: 2px 6px;
-  border-radius: 4px;
-  z-index: 1;
-}
-.el-modal-close:hover { color: #fff; background: rgba(255,255,255,0.1); }
-
-.el-modal-header {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 28px 16px 20px;
-  gap: 2px;
-}
-
-.el-modal-an {
-  position: absolute;
-  top: 10px;
-  left: 14px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  opacity: 0.85;
-}
-
-.el-modal-sym {
-  font-size: 3.8rem;
-  font-weight: 800;
-  line-height: 1;
-}
-
-.el-modal-nm {
-  font-size: 1.1rem;
-  font-weight: 600;
-  opacity: 0.9;
-}
-
-.el-modal-aw {
-  font-size: 0.8rem;
-  opacity: 0.7;
-  margin-top: 2px;
-}
-
-.el-modal-body {
-  padding: 16px 20px 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.el-modal-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 0.9rem;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
-  padding-bottom: 8px;
-}
-.el-modal-row:last-child { border-bottom: none; padding-bottom: 0; }
-.el-modal-row span:first-child { color: #888; }
-.el-modal-row span:last-child  { font-weight: 600; }
-
-.el-modal-img-wrap {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 4px;
-}
-.el-modal-img {
-  max-width: 200px;
-  max-height: 160px;
-  border-radius: 6px;
-  object-fit: contain;
-  background: rgba(255,255,255,0.05);
-}
-.el-modal-wiki-btn {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 12px;
-  padding: 11px 20px;
-  border-radius: 8px;
-  background: linear-gradient(135deg, #1a3a5c 0%, #0f2a45 50%, #1a3a5c 100%);
-  border: 1px solid rgba(107, 164, 216, 0.35);
-  color: #90c4f8;
-  font-size: 0.88rem;
-  font-weight: 600;
-  letter-spacing: 0.03em;
-  text-decoration: none;
-  overflow: hidden;
-  cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease, color 0.18s ease;
-  box-shadow: 0 0 12px rgba(107, 164, 216, 0.18), inset 0 1px 0 rgba(255,255,255,0.07);
-  animation: wiki-btn-pulse 2.8s ease-in-out infinite;
-}
-
-.el-modal-wiki-btn:hover {
-  transform: translateY(-2px) scale(1.02);
-  color: #fff;
-  border-color: rgba(144, 196, 248, 0.7);
-  box-shadow: 0 0 24px rgba(107, 164, 216, 0.5), 0 6px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12);
-  animation: none;
-}
-
-.el-modal-wiki-btn:active {
-  transform: translateY(0) scale(0.99);
-  box-shadow: 0 0 10px rgba(107, 164, 216, 0.3);
-}
-
-.wiki-btn-shimmer {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(105deg, transparent 35%, rgba(144, 196, 248, 0.18) 50%, transparent 65%);
-  background-size: 200% 100%;
-  animation: wiki-shimmer 2.4s linear infinite;
-  pointer-events: none;
-}
-
-.el-modal-wiki-btn:hover .wiki-btn-shimmer {
-  animation: wiki-shimmer 1s linear infinite;
-}
-
-.wiki-btn-icon {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  opacity: 0.85;
-  transition: opacity 0.18s;
-}
-.el-modal-wiki-btn:hover .wiki-btn-icon { opacity: 1; }
-
-.wiki-btn-text {
-  flex: 1;
-  text-align: center;
-}
-
-.wiki-btn-arrow {
-  width: 16px;
-  height: 16px;
-  flex-shrink: 0;
-  transition: transform 0.22s ease;
-}
-.el-modal-wiki-btn:hover .wiki-btn-arrow { transform: translateX(4px); }
-
-@keyframes wiki-shimmer {
-  0%   { background-position: 200% center; }
-  100% { background-position: -200% center; }
-}
-
-@keyframes wiki-btn-pulse {
-  0%, 100% { box-shadow: 0 0 12px rgba(107, 164, 216, 0.18), inset 0 1px 0 rgba(255,255,255,0.07); }
-  50%       { box-shadow: 0 0 20px rgba(107, 164, 216, 0.38), inset 0 1px 0 rgba(255,255,255,0.07); }
-}
-
-/* ── Modal fade + pop transition ── */
+/* ── Modal transition ── */
 .fade-enter-active { transition: opacity 0.25s ease; }
 .fade-leave-active { transition: opacity 0.2s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }

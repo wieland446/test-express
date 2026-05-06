@@ -9,6 +9,8 @@ import { handleUserErrors } from "./src/middlewares/handleUserErrors.js";
 import { blockRouter } from "./src/routes/blocks.routes.js";
 import { groupRouter } from "./src/routes/groups.routes.js";
 import { periodRouter } from "./src/routes/periods.routes.js";
+import { closePool } from "./src/databases/pool.postgres.js";
+import { logger } from "./src/helpers/logger.js";
 
 const REQUIRED_ENV = [
   "POSTGRES_HOST",
@@ -16,17 +18,18 @@ const REQUIRED_ENV = [
   "POSTGRES_USER",
   "POSTGRES_PASSWORD",
   "POSTGRES_DB",
+  "CORS_ORIGIN",
 ] as const;
 
 for (const key of REQUIRED_ENV) {
   if (!process.env[key]) {
-    console.error(`Missing required environment variable: ${key}`);
+    logger.error(`Missing required environment variable: ${key}`);
     process.exit(1);
   }
 }
 
 const PORT = Number(process.env.PORT ?? 3000);
-const CORS_ORIGIN = process.env.CORS_ORIGIN ?? "http://localhost:8080";
+const CORS_ORIGIN = process.env.CORS_ORIGIN as string;
 
 const app = express();
 
@@ -61,6 +64,17 @@ app.use(handleUserErrors);
 // GLOBAL ERROR HANDLING
 app.use(handleServerErrors);
 
-app.listen(PORT, () => {
-  console.log(`Server listening on port: ${PORT}`);
+const server = app.listen(PORT, () => {
+  logger.info(`Server listening on port: ${PORT}`);
 });
+
+async function shutdown(signal: string): Promise<void> {
+  logger.info(`${signal} received, shutting down`);
+  server.close(async () => {
+    await closePool();
+    process.exit(0);
+  });
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));

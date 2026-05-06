@@ -29,12 +29,20 @@ export const findElementByName = async (
   return res.rows[0] ? mapRow(res.rows[0]) : null;
 };
 
-export const findAllElements = async (): Promise<Element[]> => {
-  try {
-    const res = await pool.query(ELEMENT_SELECT);
-    return res.rows.map(mapRow);
-  } catch (error) {
-    console.error('Database connection error:', error);
-    throw error;
+export const findAllElements = async (
+  limit?: number,
+  offset?: number,
+): Promise<Element[]> => {
+  const params: number[] = [];
+  let query = ELEMENT_SELECT;
+  if (limit !== undefined) {
+    params.push(limit);
+    query += ` LIMIT $${params.length}`;
   }
+  if (offset !== undefined) {
+    params.push(offset);
+    query += ` OFFSET $${params.length}`;
+  }
+  const res = await pool.query(query, params);
+  return res.rows.map(mapRow);
 };
