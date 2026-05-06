@@ -165,15 +165,15 @@ body {
 .legend-swatch.actinide         { background: #0e3460; }
 
 /* ── Modal transition ── */
-.fade-enter-active { transition: opacity 0.25s ease; }
-.fade-leave-active { transition: opacity 0.2s ease; }
+.fade-enter-active { transition: opacity 0.6s ease; }
+.fade-leave-active { transition: opacity 0.5s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
 
 .fade-enter-active .el-modal {
-  animation: modal-pop-in 0.38s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+  animation: modal-pop-in 0.75s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
 }
 .fade-leave-active .el-modal {
-  animation: modal-pop-out 0.2s ease-in both;
+  animation: modal-pop-out 0.5s ease-in both;
 }
 
 @keyframes modal-pop-in {
