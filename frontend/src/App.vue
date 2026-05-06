@@ -152,16 +152,20 @@ export default {
   },
   computed: {
     mainElements() {
-      return this.elements.filter(el => el.group != null && el.period != null)
+      return this.elements.filter(el => {
+        const n = el.atomicNumber
+        return el.group != null && el.period != null &&
+          !(n >= 57 && n <= 71) && !(n >= 89 && n <= 103)
+      })
     },
     lanthanides() {
       return [...this.elements]
-        .filter(el => el.group == null && el.period === 6)
+        .filter(el => el.atomicNumber >= 57 && el.atomicNumber <= 71)
         .sort((a, b) => a.atomicNumber - b.atomicNumber)
     },
     actinides() {
       return [...this.elements]
-        .filter(el => el.group == null && el.period === 7)
+        .filter(el => el.atomicNumber >= 89 && el.atomicNumber <= 103)
         .sort((a, b) => a.atomicNumber - b.atomicNumber)
     },
   },
@@ -239,6 +243,8 @@ export default {
     },
     getCategory(el) {
       const n = el.atomicNumber
+      if (n >= 57 && n <= 71)                                               return 'lanthanide'
+      if (n >= 89 && n <= 103)                                              return 'actinide'
       if ([2, 10, 18, 36, 54, 86, 118].includes(n))                        return 'noble-gas'
       if ([9, 17, 35, 53, 85, 117].includes(n))                            return 'halogen'
       if ([3, 11, 19, 37, 55, 87].includes(n))                             return 'alkali-metal'
@@ -247,8 +253,6 @@ export default {
       if ([5, 14, 32, 33, 51, 52, 84].includes(n))                         return 'metalloid'
       if ([1, 6, 7, 8, 15, 16, 34].includes(n))                            return 'nonmetal'
       if ([13, 31, 49, 50, 81, 82, 83, 113, 114, 115, 116].includes(n))   return 'post-transition'
-      if (el.block === 'f' && el.period === 6)                              return 'lanthanide'
-      if (el.block === 'f' && el.period === 7)                              return 'actinide'
       return 'unknown'
     },
     formatWeight(w) {
