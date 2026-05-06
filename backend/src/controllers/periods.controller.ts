@@ -33,6 +33,9 @@ export async function handleGetPeriodByNumber(
 
   try {
     const period = await getPeriodByNumber(Number(periodNumber));
+    if (period === null) {
+      return res.status(statusCodes.notFound).json({ message: `Period '${periodNumber}' not found` });
+    }
     return res.json(period);
   } catch (err) {
     return next(err);

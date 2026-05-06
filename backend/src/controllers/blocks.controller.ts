@@ -29,8 +29,11 @@ export async function handleGetBlockByName(
   }
 
   try {
-    const blocks = await getBlockByName(blockName);
-    return res.json(blocks);
+    const block = await getBlockByName(blockName);
+    if (block === null) {
+      return res.status(statusCodes.notFound).json({ message: `Block '${blockName}' not found` });
+    }
+    return res.json(block);
   } catch (err) {
     return next(err);
   }

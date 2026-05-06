@@ -32,8 +32,11 @@ export async function handleGetElementByName(
   }
 
   try {
-    const elements = await getElementByName(elementName);
-    return res.json(elements);
+    const element = await getElementByName(elementName);
+    if (element === null) {
+      return res.status(statusCodes.notFound).json({ message: `Element '${elementName}' not found` });
+    }
+    return res.json(element);
   } catch (err) {
     return next(err);
   }

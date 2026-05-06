@@ -30,6 +30,9 @@ export async function handleGetGroupByNumber(
 
   try {
     const group = await getGroupByNumber(Number(groupNumber));
+    if (group === null) {
+      return res.status(statusCodes.notFound).json({ message: `Group '${groupNumber}' not found` });
+    }
     return res.json(group);
   } catch (err) {
     return next(err);

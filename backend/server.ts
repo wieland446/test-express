@@ -2,6 +2,7 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 import morgan from "morgan";
+import { rateLimit } from "express-rate-limit";
 import { elementRouter } from "./src/routes/elements.routes.js";
 import handleServerErrors from "./src/middlewares/handleServerErrors.js";
 import { handleUserErrors } from "./src/middlewares/handleUserErrors.js";
@@ -29,8 +30,16 @@ const CORS_ORIGIN = process.env.CORS_ORIGIN ?? "http://localhost:8080";
 
 const app = express();
 
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 100,
+  standardHeaders: "draft-8",
+  legacyHeaders: false,
+});
+
 // MIDDLEWARES
 app.use(cors({ origin: CORS_ORIGIN, credentials: true }));
+app.use(limiter);
 app.use(express.json());
 app.use(cookieParser());
 app.use(morgan("dev"));
