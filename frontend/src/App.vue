@@ -1,5 +1,7 @@
 <template>
   <div class="pt-wrapper">
+    <LoadingScreen :show="showLoader" />
+
     <h1 class="pt-title">Periodic Table of the Elements</h1>
 
     <div v-if="loading" class="status-msg">Loading elements…</div>
@@ -118,6 +120,7 @@ import axios from 'axios'
 import ElementModal from './components/ElementModal.vue'
 import FilterPanel from './components/FilterPanel.vue'
 import AtomAnimation from './components/AtomAnimation.vue'
+import LoadingScreen from './components/LoadingScreen.vue'
 
 const CATEGORIES = [
   { key: 'alkali-metal',     label: 'Alkali Metal' },
@@ -136,7 +139,7 @@ const IMAGE_CACHE_MAX = 50
 
 export default {
   name: 'App',
-  components: { ElementModal, FilterPanel, AtomAnimation },
+  components: { ElementModal, FilterPanel, AtomAnimation, LoadingScreen },
   data() {
     return {
       elements: [],
@@ -148,6 +151,8 @@ export default {
       activeFilters: CATEGORIES.map(c => c.key),
       imageCache: {},
       searchQuery: '',
+      showLoader: true,
+      loaderTimerDone: false,
     }
   },
   computed: {
@@ -202,16 +207,23 @@ export default {
     },
   },
   mounted() {
+    setTimeout(() => {
+      this.loaderTimerDone = true
+      if (!this.loading) this.showLoader = false
+    }, 5000)
+
     const apiUrl = process.env.VUE_APP_API_URL || 'http://localhost:3000'
     axios.get(`${apiUrl}/elements`)
       .then(res => {
         this.elements = res.data
         this.loading = false
+        if (this.loaderTimerDone) this.showLoader = false
       })
       .catch(err => {
         console.error(err)
         this.error = 'Could not load elements from the server.'
         this.loading = false
+        if (this.loaderTimerDone) this.showLoader = false
       })
     window.addEventListener('keydown', this.onKeydown)
   },
