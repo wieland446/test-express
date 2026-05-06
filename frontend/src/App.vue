@@ -565,7 +565,24 @@ body {
 }
 .el-modal-wiki:hover { text-decoration: underline; color: #90c4f8; }
 
-/* ── Fade transition ── */
-.fade-enter-active, .fade-leave-active { transition: opacity 0.18s ease; }
+/* ── Modal fade + pop transition ── */
+.fade-enter-active { transition: opacity 0.25s ease; }
+.fade-leave-active { transition: opacity 0.2s ease; }
 .fade-enter-from, .fade-leave-to { opacity: 0; }
+
+.fade-enter-active .el-modal {
+  animation: modal-pop-in 0.38s cubic-bezier(0.175, 0.885, 0.32, 1.275) both;
+}
+.fade-leave-active .el-modal {
+  animation: modal-pop-out 0.2s ease-in both;
+}
+
+@keyframes modal-pop-in {
+  from { opacity: 0; transform: scale(0.72) translateY(48px); }
+  to   { opacity: 1; transform: scale(1)    translateY(0); }
+}
+@keyframes modal-pop-out {
+  from { opacity: 1; transform: scale(1)    translateY(0); }
+  to   { opacity: 0; transform: scale(0.85) translateY(24px); }
+}
 </style>
