@@ -6,9 +6,6 @@ import { rateLimit } from "express-rate-limit";
 import { elementRouter } from "./src/routes/elements.routes.js";
 import handleServerErrors from "./src/middlewares/handleServerErrors.js";
 import { handleUserErrors } from "./src/middlewares/handleUserErrors.js";
-import { blockRouter } from "./src/routes/blocks.routes.js";
-import { groupRouter } from "./src/routes/groups.routes.js";
-import { periodRouter } from "./src/routes/periods.routes.js";
 import { closePool } from "./src/databases/pool.postgres.js";
 import { logger } from "./src/helpers/logger.js";
 
@@ -54,9 +51,6 @@ app.get("/health", (_req, res) => {
 
 // ROUTES
 app.use("/elements", elementRouter);
-app.use("/blocks", blockRouter);
-app.use("/groups", groupRouter);
-app.use("/periods", periodRouter);
 
 // SPECIFIC ROUTES ERROR HANDLING
 app.use(handleUserErrors);
