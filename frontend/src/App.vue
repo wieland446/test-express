@@ -6,6 +6,19 @@
     <div v-else-if="error" class="status-msg error">{{ error }}</div>
 
     <template v-else>
+      <div class="search-wrap">
+        <input
+          v-model="searchQuery"
+          class="search-input"
+          type="search"
+          placeholder="Search by name, symbol or number…"
+          autocomplete="off"
+          spellcheck="false"
+        />
+      </div>
+
+      <AtomAnimation />
+
       <div class="pt-outer">
         <div class="pt-grid">
 
@@ -14,7 +27,7 @@
             v-for="el in mainElements"
             :key="el.atomicNumber"
             class="el-cell"
-            :class="[getCategory(el), { 'filtered-out': !activeFilters.includes(getCategory(el)) }]"
+            :class="[getCategory(el), { 'filtered-out': !activeFilters.includes(getCategory(el)) || (searchQuery && !matchesSearch(el)) }]"
             :style="{ gridRow: Number(el.period), gridColumn: Number(el.group) }"
             @click="selectElement(el)"
           >
@@ -50,7 +63,7 @@
             v-for="(el, i) in lanthanides"
             :key="el.atomicNumber"
             class="el-cell lanthanide"
-            :class="{ 'filtered-out': !activeFilters.includes('lanthanide') }"
+            :class="{ 'filtered-out': !activeFilters.includes('lanthanide') || (searchQuery && !matchesSearch(el)) }"
             :style="{ gridRow: 9, gridColumn: i + 3 }"
             @click="selectElement(el)"
           >
@@ -68,7 +81,7 @@
             v-for="(el, i) in actinides"
             :key="el.atomicNumber"
             class="el-cell actinide"
-            :class="{ 'filtered-out': !activeFilters.includes('actinide') }"
+            :class="{ 'filtered-out': !activeFilters.includes('actinide') || (searchQuery && !matchesSearch(el)) }"
             :style="{ gridRow: 10, gridColumn: i + 3 }"
             @click="selectElement(el)"
           >
@@ -104,6 +117,7 @@
 import axios from 'axios'
 import ElementModal from './components/ElementModal.vue'
 import FilterPanel from './components/FilterPanel.vue'
+import AtomAnimation from './components/AtomAnimation.vue'
 
 const CATEGORIES = [
   { key: 'alkali-metal',     label: 'Alkali Metal' },
@@ -122,7 +136,7 @@ const IMAGE_CACHE_MAX = 50
 
 export default {
   name: 'App',
-  components: { ElementModal, FilterPanel },
+  components: { ElementModal, FilterPanel, AtomAnimation },
   data() {
     return {
       elements: [],
@@ -133,6 +147,7 @@ export default {
       elementImageUrl: null,
       activeFilters: CATEGORIES.map(c => c.key),
       imageCache: {},
+      searchQuery: '',
     }
   },
   computed: {
@@ -204,7 +219,19 @@ export default {
       this.selectedElement = el
     },
     onKeydown(e) {
-      if (e.key === 'Escape') this.selectedElement = null
+      if (e.key === 'Escape') {
+        this.selectedElement = null
+        this.searchQuery = ''
+      }
+    },
+    matchesSearch(el) {
+      const q = this.searchQuery.trim().toLowerCase()
+      if (!q) return true
+      return (
+        el.name.toLowerCase().includes(q) ||
+        el.symbol.toLowerCase().includes(q) ||
+        String(el.atomicNumber).startsWith(q)
+      )
     },
     getCategoryLabel(el) {
       const key = this.getCategory(el)
@@ -264,6 +291,28 @@ body {
 
 .status-msg { font-size: 1.1rem; color: #aaa; padding: 48px; }
 .status-msg.error { color: #e74c3c; }
+
+.search-wrap {
+  width: min(420px, 90vw);
+}
+
+.search-input {
+  width: 100%;
+  padding: 10px 16px;
+  background: #1a1a26;
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 8px;
+  color: #e0e0e0;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.search-input::placeholder { color: #555; }
+.search-input:focus {
+  border-color: rgba(144, 196, 248, 0.5);
+  box-shadow: 0 0 0 3px rgba(144, 196, 248, 0.08);
+}
+.search-input::-webkit-search-cancel-button { cursor: pointer; }
 
 /* ── Horizontal scroll wrapper ── */
 .pt-outer {
