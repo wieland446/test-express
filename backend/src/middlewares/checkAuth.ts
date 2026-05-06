@@ -18,8 +18,8 @@ export async function checkAuth(
     }
 
     req.body.user = userSession.username;
-    next();
+    return next();
   } catch (err) {
-    next(err);
+    return next(err);
   }
 }

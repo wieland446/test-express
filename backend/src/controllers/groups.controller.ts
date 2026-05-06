@@ -30,8 +30,8 @@ export async function handleGetGroupByNumber(
 
   try {
     const group = await getGroupByNumber(Number(groupNumber));
-    res.json(group);
+    return res.json(group);
   } catch (err) {
-    next(err);
+    return next(err);
   }
 }

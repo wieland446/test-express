@@ -33,8 +33,8 @@ export async function handleGetPeriodByNumber(
 
   try {
     const period = await getPeriodByNumber(Number(periodNumber));
-    res.json(period);
+    return res.json(period);
   } catch (err) {
-    next(err);
+    return next(err);
   }
 }

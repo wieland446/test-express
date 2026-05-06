@@ -42,8 +42,8 @@ export async function createNewUser(
     }
 
     const newUser = await registerUser(username);
-    res.status(201).json(newUser);
+    return res.status(201).json(newUser);
   } catch (err) {
-    next(err);
+    return next(err);
   }
 }

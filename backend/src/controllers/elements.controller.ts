@@ -33,8 +33,8 @@ export async function handleGetElementByName(
 
   try {
     const elements = await getElementByName(elementName);
-    res.json(elements);
+    return res.json(elements);
   } catch (err) {
-    next(err);
+    return next(err);
   }
 }

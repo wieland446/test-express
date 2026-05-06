@@ -21,7 +21,7 @@ export async function loginUser(
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
   });
-  res.json({ message: "Login succeeded!" });
+  return res.json({ message: "Login succeeded!" });
 }
 
 export async function logoutUser(

@@ -28,5 +28,5 @@ export const handleUserErrors = (
     console.error(`${err.name}: ${err.message}`);
     return res.status(400).json({ message: err.message });
   }
-  next(err);
+  return next(err);
 };

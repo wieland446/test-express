@@ -30,8 +30,8 @@ export async function handleGetBlockByName(
 
   try {
     const blocks = await getBlockByName(blockName);
-    res.json(blocks);
+    return res.json(blocks);
   } catch (err) {
-    next(err);
+    return next(err);
   }
 }

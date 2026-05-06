@@ -11,7 +11,9 @@ Donnerstag - tests schreiben, design implementieren, optimierungen, README
 
 Freitag - evtl Präsentation, testen, bugfixes, features
 
-
+docker compose down                
+docker compose build --no-cache
+docker compose up
 
 
 
