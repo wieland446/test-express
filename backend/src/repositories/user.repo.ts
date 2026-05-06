@@ -1,5 +1,5 @@
 import { getPostgresPool } from "../databases/pool.postgres.js";
-import type { User } from "../models/user.model.ts";
+import type { User } from "../models/user.model.js";
 
 const pool = getPostgresPool();
 

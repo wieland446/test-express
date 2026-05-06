@@ -4,12 +4,14 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        VUE_APP_API_URL: /api
     ports:
       - "8080:8080"
-    environment:
-      - VITE_API_URL=http://backend:3000
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+
   backend:
     container_name: backend
     build: ./backend
@@ -23,6 +25,12 @@ services:
       - .env
     environment:
       POSTGRES_HOST: db
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   db:
     image: postgres:15
     container_name: pg-db
@@ -39,5 +47,6 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
       - ./db/init:/docker-entrypoint-initdb.d
+
 volumes:
   pgdata:

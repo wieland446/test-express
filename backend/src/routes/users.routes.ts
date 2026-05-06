@@ -4,7 +4,6 @@ import {
   getUsers,
   createNewUser,
 } from "../controllers/users.controller.js";
-import { checkAuth } from "../middlewares/checkAuth.js";
 
 const userRouter = express.Router();
 

@@ -4,10 +4,10 @@ import type { Period } from "../models/period.model.js";
 const pool = getPostgresPool();
 
 export const findPeriodByNumber = async (
-  name: number,
+  periodNumber: number,
 ): Promise<Period | null> => {
   const res = await pool.query(`SELECT * FROM periods WHERE number = $1`, [
-    name,
+    periodNumber,
   ]);
 
   if (!res.rows[0]) {

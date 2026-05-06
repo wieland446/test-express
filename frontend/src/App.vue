@@ -157,6 +157,7 @@ export default {
       selectedElement: null,
       elementImageUrl: null,
       activeFilters: CATEGORIES.map(c => c.key),
+      imageCache: {},
     }
   },
   computed: {
@@ -183,18 +184,28 @@ export default {
     selectedElement(el) {
       this.elementImageUrl = null
       if (!el) return
+      if (this.imageCache[el.atomicNumber] !== undefined) {
+        this.elementImageUrl = this.imageCache[el.atomicNumber]
+        return
+      }
       fetch(`https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(el.name)}&prop=pageimages&format=json&pithumbsize=300&origin=*`)
         .then(r => r.json())
         .then(data => {
           const pages = data.query.pages
           const page = pages[Object.keys(pages)[0]]
-          this.elementImageUrl = page.thumbnail?.source ?? null
+          const url = page.thumbnail?.source ?? null
+          this.imageCache[el.atomicNumber] = url
+          this.elementImageUrl = url
         })
-        .catch(() => { this.elementImageUrl = null })
+        .catch(() => {
+          this.imageCache[el.atomicNumber] = null
+          this.elementImageUrl = null
+        })
     },
   },
   mounted() {
-    axios.get('http://localhost:3000/elements')
+    const apiUrl = process.env.VUE_APP_API_URL || 'http://localhost:3000'
+    axios.get(`${apiUrl}/elements`)
       .then(res => {
         this.elements = res.data
         this.loading = false

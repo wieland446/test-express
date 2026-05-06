@@ -3,23 +3,23 @@ import {
   findUserById,
   findAllUsers,
 } from "../repositories/user.repo.js";
+import {
+  UserNotFoundError,
+  InvalidUserDataError,
+} from "../middlewares/handleUserErrors.js";
 
 export async function registerUser(username: string) {
-  // Business-Regel
   if (username.length < 3) {
-    throw new Error("Username must be at least 3 characters long");
+    throw new InvalidUserDataError(username);
   }
-
   return createUser(username);
 }
 
 export async function getUserById(id: number) {
   const user = await findUserById(id);
-
   if (!user) {
-    throw new Error("User not found");
+    throw new UserNotFoundError(String(id));
   }
-
   return user;
 }
 

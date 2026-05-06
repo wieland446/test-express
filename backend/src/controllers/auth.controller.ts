@@ -18,7 +18,7 @@ export async function loginUser(
   }
   res.cookie("sessionId", sessionId, {
     httpOnly: true,
-    secure: false, // Auf 'true' setzen, wenn du HTTPS nutzt
+    secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
   });
   res.json({ message: "Login succeeded!" });

@@ -11,15 +11,36 @@ import { blockRouter } from "./src/routes/blocks.routes.js";
 import { groupRouter } from "./src/routes/groups.routes.js";
 import { periodRouter } from "./src/routes/periods.routes.js";
 
-// INIT
+const REQUIRED_ENV = [
+  "POSTGRES_HOST",
+  "POSTGRES_PORT",
+  "POSTGRES_USER",
+  "POSTGRES_PASSWORD",
+  "POSTGRES_DB",
+] as const;
+
+for (const key of REQUIRED_ENV) {
+  if (!process.env[key]) {
+    console.error(`Missing required environment variable: ${key}`);
+    process.exit(1);
+  }
+}
+
 const PORT = Number(process.env.PORT ?? 3000);
+const CORS_ORIGIN = process.env.CORS_ORIGIN ?? "http://localhost:8080";
+
 const app = express();
 
 // MIDDLEWARES
-app.use(cors());
+app.use(cors({ origin: CORS_ORIGIN, credentials: true }));
 app.use(express.json());
 app.use(cookieParser());
 app.use(morgan("dev"));
+
+// HEALTH CHECK
+app.get("/health", (_req, res) => {
+  res.json({ status: "ok" });
+});
 
 // ROUTES
 app.use("/users", userRouter);

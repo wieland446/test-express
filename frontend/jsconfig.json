@@ -2,7 +2,6 @@
   "compilerOptions": {
     "target": "esnext",
     "module": "esnext",
-    "jsx": "preserve",
     "baseUrl": "./",
     "moduleResolution": "node",
     "paths": {
@@ -17,6 +16,6 @@
       "scripthost"
     ]
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "src/**/*.vue"],
   "exclude": ["node_modules", "dist"]
 }
