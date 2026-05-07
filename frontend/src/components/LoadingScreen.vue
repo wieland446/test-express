@@ -385,8 +385,8 @@ export default {
   background-size: 300% 100%;
   box-shadow: 0 0 10px rgba(90,173,255,0.65);
   animation:
-    ls-bar-fill    5s linear         forwards,
-    ls-bar-shimmer 2s linear         infinite;
+    ls-bar-fill    0.8s linear        forwards,
+    ls-bar-shimmer 1s linear         infinite;
 }
 
 @keyframes ls-bar-fill {
