@@ -191,7 +191,12 @@ export default {
         .then(r => r.json())
         .then(data => {
           clearTimeout(timeoutId)
-          const pages = data.query.pages
+          const pages = data?.query?.pages
+          if (!pages) {
+            this.imageCache[el.atomicNumber] = null
+            this.elementImageUrl = null
+            return
+          }
           const page = pages[Object.keys(pages)[0]]
           const url = page.thumbnail?.source ?? null
           const keys = Object.keys(this.imageCache)

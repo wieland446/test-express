@@ -12,7 +12,8 @@ import { v4 as uuidv4 } from "uuid";
 import { elementRouter } from "./src/routes/elements.routes.js";
 import handleServerErrors from "./src/middlewares/handleServerErrors.js";
 import { handleUserErrors } from "./src/middlewares/handleUserErrors.js";
-import { closePool } from "./src/databases/pool.postgres.js";
+import { closePool, getPostgresPool } from "./src/databases/pool.postgres.js";
+import { statusCodes } from "./src/helpers/statusCodes.js";
 import { logger } from "./src/helpers/logger.js";
 
 const REQUIRED_ENV = [
@@ -50,7 +51,7 @@ const limiter = rateLimit({
   legacyHeaders: false,
   skip: (req) => req.path === "/health",
   handler: (_req, res) => {
-    res.status(429).json({ message: "Too many requests, please try again later" });
+    res.status(statusCodes.tooManyRequests).json({ message: "Too many requests, please try again later" });
   },
 });
 
@@ -78,8 +79,13 @@ if (process.env.NODE_ENV === "production") {
 }
 
 // HEALTH CHECK
-app.get("/health", (_req, res) => {
-  res.json({ status: "ok" });
+app.get("/health", async (_req, res) => {
+  try {
+    await getPostgresPool().query("SELECT 1");
+    res.json({ status: "ok" });
+  } catch {
+    res.status(503).json({ status: "error", message: "Database unreachable" });
+  }
 });
 
 // ROUTES

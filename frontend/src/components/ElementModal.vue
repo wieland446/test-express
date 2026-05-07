@@ -18,9 +18,9 @@
         <div class="el-modal-row"><span>Block</span><span>{{ element.block }}</span></div>
         <div class="el-modal-row"><span>Category</span><span>{{ categoryLabel }}</span></div>
         <a
-          :href="'https://en.wikipedia.org/wiki/' + element.name"
+          :href="'https://en.wikipedia.org/wiki/' + encodeURIComponent(element.name)"
           target="_blank"
-          rel="noopener"
+          rel="noopener noreferrer"
           class="el-modal-wiki-btn"
         >
           <span class="wiki-btn-shimmer"></span>
