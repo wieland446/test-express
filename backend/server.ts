@@ -1,8 +1,14 @@
+import path from "node:path";
+import dotenv from "dotenv";
+dotenv.config({ path: path.resolve(process.cwd(), "../.env") });
+
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import helmet from "helmet";
 import morgan from "morgan";
 import { rateLimit } from "express-rate-limit";
+import { v4 as uuidv4 } from "uuid";
 import { elementRouter } from "./src/routes/elements.routes.js";
 import handleServerErrors from "./src/middlewares/handleServerErrors.js";
 import { handleUserErrors } from "./src/middlewares/handleUserErrors.js";
@@ -28,6 +34,13 @@ for (const key of REQUIRED_ENV) {
 const PORT = Number(process.env.PORT ?? 3000);
 const CORS_ORIGIN = process.env.CORS_ORIGIN as string;
 
+try {
+  new URL(CORS_ORIGIN);
+} catch {
+  logger.error(`Invalid CORS_ORIGIN URL: ${CORS_ORIGIN}`);
+  process.exit(1);
+}
+
 const app = express();
 
 const limiter = rateLimit({
@@ -35,14 +48,34 @@ const limiter = rateLimit({
   limit: 100,
   standardHeaders: "draft-8",
   legacyHeaders: false,
+  skip: (req) => req.path === "/health",
+  handler: (_req, res) => {
+    res.status(429).json({ message: "Too many requests, please try again later" });
+  },
 });
 
 // MIDDLEWARES
+app.use(helmet());
 app.use(cors({ origin: CORS_ORIGIN, credentials: true }));
 app.use(limiter);
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true, limit: "1mb" }));
 app.use(cookieParser());
 app.use(morgan("dev"));
+app.use((_req, res, next) => {
+  res.locals.requestId = uuidv4();
+  next();
+});
+
+// Redirect HTTP → HTTPS behind a reverse proxy in production
+if (process.env.NODE_ENV === "production") {
+  app.use((req, res, next) => {
+    if (req.header("x-forwarded-proto") !== "https") {
+      return res.redirect(`https://${req.header("host")}${req.url}`);
+    }
+    next();
+  });
+}
 
 // HEALTH CHECK
 app.get("/health", (_req, res) => {

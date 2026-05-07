@@ -5,9 +5,13 @@ const handleServerErrors = (
   err: Error,
   req: Request,
   res: Response,
-  next: NextFunction,
+  _next: NextFunction,
 ) => {
-  logger.error(err.message, { stack: err.stack, path: req.path });
+  logger.error(err.message, {
+    stack: process.env.NODE_ENV !== "production" ? err.stack : undefined,
+    path: req.path,
+    requestId: res.locals.requestId,
+  });
   res.status(500).json({ message: "Internal server error" });
 };
 

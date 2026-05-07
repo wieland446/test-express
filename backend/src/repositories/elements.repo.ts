@@ -1,8 +1,6 @@
 import { getPostgresPool } from "../databases/pool.postgres.js";
 import type { Element } from "../models/element.model.js";
 
-const pool = getPostgresPool();
-
 const ELEMENT_SELECT = `
   SELECT name, symbol, atomic_number, atomic_weight, group_number, period, block
   FROM elements
@@ -21,7 +19,7 @@ const mapRow = (row: Record<string, unknown>): Element => ({
 export const findElementByName = async (
   name: string,
 ): Promise<Element | null> => {
-  const res = await pool.query(`${ELEMENT_SELECT} WHERE name = $1`, [name]);
+  const res = await getPostgresPool().query(`${ELEMENT_SELECT} WHERE name = $1`, [name]);
   return res.rows[0] ? mapRow(res.rows[0]) : null;
 };
 
@@ -39,6 +37,6 @@ export const findAllElements = async (
     params.push(offset);
     query += ` OFFSET $${params.length}`;
   }
-  const res = await pool.query(query, params);
+  const res = await getPostgresPool().query(query, params);
   return res.rows.map(mapRow);
 };

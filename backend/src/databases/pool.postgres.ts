@@ -1,19 +1,19 @@
-import path from "node:path";
-import dotenv from "dotenv";
 import { Pool } from "pg";
 import { logger } from "../helpers/logger.js";
-
-dotenv.config({
-  path: path.resolve(process.cwd(), ".env"),
-});
 
 let pool: Pool | null = null;
 
 export function getPostgresPool(): Pool {
   if (!pool) {
+    const port = Number(process.env.POSTGRES_PORT);
+    if (isNaN(port) || port < 1 || port > 65535) {
+      logger.error(`Invalid POSTGRES_PORT: ${process.env.POSTGRES_PORT}`);
+      process.exit(1);
+    }
+
     pool = new Pool({
       host: process.env.POSTGRES_HOST,
-      port: Number(process.env.POSTGRES_PORT),
+      port,
       user: process.env.POSTGRES_USER,
       password: process.env.POSTGRES_PASSWORD,
       database: process.env.POSTGRES_DB,
@@ -21,6 +21,8 @@ export function getPostgresPool(): Pool {
       max: Number(process.env.POSTGRES_POOL_MAX ?? 10),
       idleTimeoutMillis: 30_000,
       connectionTimeoutMillis: 2_000,
+      statement_timeout: 30_000,
+      idle_in_transaction_session_timeout: 10_000,
     });
 
     pool.on("error", (err) => {
