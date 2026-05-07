@@ -99,7 +99,7 @@ body {
   overflow: hidden;
   border: 1px solid rgba(255,255,255,0.07);
   cursor: default;
-  transition: transform 0.12s ease, filter 0.12s ease, border-color 0.12s ease;
+  transition: transform 0.12s ease, filter 0.12s ease, border-color 0.12s ease, opacity 0.35s ease;
 }
 
 .el-cell:hover {
