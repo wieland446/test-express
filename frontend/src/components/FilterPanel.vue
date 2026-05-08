@@ -97,3 +97,20 @@ export default {
   flex-shrink: 0;
 }
 </style>
+
+<style>
+body.light-mode .filters {
+  background: rgba(0,0,0,0.04);
+}
+body.light-mode .filters-title {
+  color: #666;
+}
+body.light-mode .filters-toggle {
+  border-color: rgba(0,0,0,0.18);
+  color: #444;
+}
+body.light-mode .filters-toggle:hover {
+  background: rgba(0,0,0,0.07);
+  color: #111;
+}
+</style>

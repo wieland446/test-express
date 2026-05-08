@@ -232,3 +232,23 @@ export default {
   50%       { box-shadow: 0 0 20px rgba(107, 164, 216, 0.38), inset 0 1px 0 rgba(255,255,255,0.07); }
 }
 </style>
+
+<style>
+body.light-mode .el-modal {
+  background: #ffffff;
+  border-color: rgba(0,0,0,0.12);
+  box-shadow: 0 8px 40px rgba(0,0,0,0.18);
+}
+body.light-mode .el-modal-close {
+  color: rgba(0,0,0,0.45);
+}
+body.light-mode .el-modal-close:hover {
+  color: #000;
+  background: rgba(0,0,0,0.07);
+}
+body.light-mode .el-modal-row {
+  border-bottom-color: rgba(0,0,0,0.07);
+}
+body.light-mode .el-modal-row span:first-child { color: #666; }
+body.light-mode .el-modal-img { background: rgba(0,0,0,0.04); }
+</style>

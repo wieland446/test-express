@@ -1,5 +1,12 @@
 <template>
   <div class="pt-wrapper">
+    <button class="theme-toggle" @click="toggleDarkMode" :aria-label="darkMode ? 'Switch to light mode' : 'Switch to dark mode'">
+      <span class="theme-toggle-track">
+        <span class="theme-toggle-thumb"></span>
+      </span>
+      <span class="theme-toggle-label">{{ darkMode ? '☾' : '☀' }}</span>
+    </button>
+
     <LoadingScreen :show="showLoader" />
 
     <h1 class="pt-title">Periodic Table of the Elements</h1>
@@ -153,6 +160,7 @@ export default {
       searchQuery: '',
       showLoader: true,
       loaderTimerDone: false,
+      darkMode: true,
     }
   },
   computed: {
@@ -185,7 +193,7 @@ export default {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 5000)
       fetch(
-        `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(el.name)}&prop=pageimages&format=json&pithumbsize=300&origin=*`,
+        `https://en.wikipedia.org/w/api.php?action=query&titles=${encodeURIComponent(el.name)}&prop=pageimages&format=json&pithumbsize=300&redirects=1&origin=*`,
         { signal: controller.signal },
       )
         .then(r => r.json())
@@ -209,6 +217,9 @@ export default {
           this.imageCache[el.atomicNumber] = null
           this.elementImageUrl = null
         })
+    },
+    darkMode(val) {
+      document.body.classList.toggle('light-mode', !val)
     },
   },
   mounted() {
@@ -236,6 +247,9 @@ export default {
     window.removeEventListener('keydown', this.onKeydown)
   },
   methods: {
+    toggleDarkMode() {
+      this.darkMode = !this.darkMode
+    },
     selectElement(el) {
       this.selectedElement = el
     },
