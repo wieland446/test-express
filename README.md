@@ -22,6 +22,7 @@ A full-stack web application for exploring all 118 chemical elements with intera
 - **Category filtering** — narrow by element type (alkali metals, halogens, noble gases, lanthanides, actinides, and more)
 - **Element detail modal** — click any element to see its full properties; closes with ESC
 - **Atom animation** — animated component for visual flair
+- **Dark Mode toggle switch** — switch betwenn dark & light color mode
 - **Loading screen** — shown during initial data fetch
 - **REST API** — paginated element listing and name-based lookup with input validation and 1-hour HTTP cache headers
 - **Health endpoint** — `/health` for Docker orchestration
