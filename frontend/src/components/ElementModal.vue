@@ -1,5 +1,6 @@
 <template>
   <div class="el-modal-overlay" @click.self="$emit('close')">
+    <div class="el-modal-shimmer">
     <div class="el-modal">
       <button class="el-modal-close" @click="$emit('close')">✕</button>
       <div class="el-modal-header" :class="category">
@@ -30,6 +31,7 @@
           </svg>
         </a>
       </div>
+    </div>
     </div>
   </div>
 </template>
@@ -66,10 +68,39 @@ export default {
   z-index: 100;
 }
 
+.el-modal-shimmer {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  padding: 2px;
+  animation: shimmer-pulse-glow 2.5s ease-in-out infinite;
+}
+
+.el-modal-shimmer::before {
+  content: '';
+  position: absolute;
+  inset: -100%;
+  background: conic-gradient(
+    from 0deg,
+    #996515, #ffd700, #fffacd, #ffd700,
+    #ffa500, #b8860b, #ffd700, #fffacd, #996515
+  );
+  animation: shimmer-spin 3s linear infinite;
+}
+
+@keyframes shimmer-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes shimmer-pulse-glow {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(255, 215, 0, 0.35)); }
+  50%       { filter: drop-shadow(0 0 18px rgba(255, 215, 0, 0.7)); }
+}
+
 .el-modal {
   position: relative;
   background: #1a1a26;
-  border: 1px solid rgba(255,255,255,0.12);
+  border: none;
   border-radius: 10px;
   width: min(340px, 90vw);
   overflow: hidden;
@@ -236,7 +267,6 @@ export default {
 <style>
 body.light-mode .el-modal {
   background: #ffffff;
-  border-color: rgba(0,0,0,0.12);
   box-shadow: 0 8px 40px rgba(0,0,0,0.18);
 }
 body.light-mode .el-modal-close {

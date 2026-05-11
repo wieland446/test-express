@@ -10,7 +10,7 @@ A full-stack web application for exploring all 118 chemical elements with intera
 | ------------- | ------------------------------------- |
 | Frontend      | Vue.js 3, Axios                       |
 | Backend       | Node.js, Express 4, TypeScript 5      |
-| Database      | PostgreSQL 15                         |                         
+| Database      | PostgreSQL                            |                         
 | Deployment    | Docker Compose, nginx                 |
 
 ---

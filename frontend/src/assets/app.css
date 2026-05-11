@@ -130,6 +130,39 @@ body.light-mode .search-input:focus {
 .el-cell.filtered-out { opacity: 0.1; pointer-events: none; }
 .el-cell:not(.placeholder) { cursor: pointer; }
 
+.el-cell.selected {
+  overflow: visible;
+  z-index: 15;
+  animation: cell-shimmer-pulse 2.5s ease-in-out infinite;
+}
+
+.el-cell.selected::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 6px;
+  padding: 2px;
+  background: conic-gradient(
+    from 0deg,
+    #996515, #ffd700, #fffacd, #ffd700,
+    #ffa500, #b8860b, #ffd700, #fffacd, #996515
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: cell-shimmer-spin 3s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes cell-shimmer-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes cell-shimmer-pulse {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(255, 215, 0, 0.4)); }
+  50%       { filter: drop-shadow(0 0 14px rgba(255, 215, 0, 0.85)); }
+}
+
 .el-an {
   position: absolute;
   top: 3px;

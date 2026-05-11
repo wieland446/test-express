@@ -36,7 +36,7 @@
             v-for="el in mainElements"
             :key="el.atomicNumber"
             class="el-cell"
-            :class="[getCategory(el), { 'filtered-out': !activeFilters.includes(getCategory(el)) || (searchQuery && !matchesSearch(el)) }]"
+            :class="[getCategory(el), { 'filtered-out': !activeFilters.includes(getCategory(el)) || (searchQuery && !matchesSearch(el)), 'selected': selectedElement && selectedElement.atomicNumber === el.atomicNumber }]"
             :style="{ gridRow: Number(el.period), gridColumn: Number(el.group) }"
             @click="selectElement(el)"
           >
@@ -72,7 +72,7 @@
             v-for="(el, i) in lanthanides"
             :key="el.atomicNumber"
             class="el-cell lanthanide"
-            :class="{ 'filtered-out': !activeFilters.includes('lanthanide') || (searchQuery && !matchesSearch(el)) }"
+            :class="{ 'filtered-out': !activeFilters.includes('lanthanide') || (searchQuery && !matchesSearch(el)), 'selected': selectedElement && selectedElement.atomicNumber === el.atomicNumber }"
             :style="{ gridRow: 9, gridColumn: i + 3 }"
             @click="selectElement(el)"
           >
@@ -90,7 +90,7 @@
             v-for="(el, i) in actinides"
             :key="el.atomicNumber"
             class="el-cell actinide"
-            :class="{ 'filtered-out': !activeFilters.includes('actinide') || (searchQuery && !matchesSearch(el)) }"
+            :class="{ 'filtered-out': !activeFilters.includes('actinide') || (searchQuery && !matchesSearch(el)), 'selected': selectedElement && selectedElement.atomicNumber === el.atomicNumber }"
             :style="{ gridRow: 10, gridColumn: i + 3 }"
             @click="selectElement(el)"
           >
